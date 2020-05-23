@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from pyopt.util import load_pickle
 
 
-def mseq(N, itr=0, save=False):
+def prbs(N, itr=0):
     MC = np.array([[5, 3, 2, 1, 0], [6, 5, 2, 1, 0], [7, 3, 2, 1, 0], [8, 7, 2, 1, 0],
                    [9, 7, 2, 1, 0], [10, 5, 2, 1, 0], [11, 4, 2, 1, 0], [12, 8, 2, 1, 0],
                    [13, 12, 8, 2, 0], [14, 3, 2, 1, 0], [15, 12, 3, 1, 0], [16, 12, 3, 1, 0], [17, 3, 2, 1, 0]])
@@ -25,64 +25,13 @@ def mseq(N, itr=0, save=False):
         tmp = out
         for i in range(itr - 1):
             out = np.concatenate([out, tmp])
-    if save:
-        with open('dataset/Mseq_' + str(N) + '_' + str(itr) + '.pickle', 'wb') as f:
-            pickle.dump(out, f)
     return out
 
 
-def mseq2(N, save=False):
-    MC = np.array([[5, 3, 2, 1, 0], [6, 5, 2, 1, 0], [7, 3, 2, 1, 0], [8, 7, 2, 1, 0],
-                   [9, 7, 2, 1, 0], [10, 5, 2, 1, 0], [11, 4, 2, 1, 0], [12, 8, 2, 1, 0],
-                   [13, 12, 8, 2, 0], [14, 3, 2, 1, 0], [15, 12, 3, 1, 0], [16, 12, 3, 1, 0], [17, 3, 2, 1, 0]])
-    m = np.zeros((N, 2), dtype=int)
-    m[:, 0] = np.ones(N, dtype=int)
-    out = np.zeros(2 ** N + (N - 1), dtype=int)
-    for i in range(2 ** N + (N - 1)):
-        b = i % 2
-        a = (i + 1) % 2
-        for k in range(N - 1):
-            m[k, a] = m[k + 1, b]
-        tmp = m[MC[N - 5, 1], b] + m[MC[N - 5, 2], b] + m[MC[N - 5, 3], b] + m[MC[N - 5, 4], b]
-        m[N - 1, a] = tmp % 2
-        out[i] = m[0, b]
-    if save:
-        with open('dataset/Mseq_' + str(N) + '.pickle', 'wb') as f:
-            pickle.dump(out, f)
-    return out
-
-
-def normal(N, itr=0):
-    init_seq = mseq(N, itr)
-    return init_seq
-
-
-def wo(N):
-    tmp = mseq(N)
-    init_seq = np.zeros(2 ** N * N, dtype=int)
-    for i in range(2 ** N):
-        init_seq[i * N: (i + 1) * N] = tmp[i: i + N]
-
-    return init_seq
-
-
-def rwo(N):
-    tmp = wo(N).reshape(2 ** N, N)
-    init_seq = np.zeros_like(tmp, dtype=int)
-    row = list(range(len(tmp)))
-    random.shuffle(row)
-    for i in range(len(tmp)):
-        init_seq[i] = tmp[row[i]]
-    init_seq = init_seq.reshape(2 ** N * N)
-
-    return init_seq
-
-
-def r(N):
+def random(N):
     tmp = [random.randint(0, 1) for i in range(2 ** N * N)]
-    init_seq = np.array(tmp)
-
-    return init_seq
+    bitsq = np.array(tmp)
+    return bitsq
 
 
 def eightb_tenb(N):
@@ -220,21 +169,9 @@ def eightb_tenb(N):
     return init_seq
 
 
-def eightb_tenb_2(N):
-    init_seqs = load_pickle('dataset/init_seqs_8b10b.pickle')
-    init_seqs_new = np.zeros((len(init_seqs), 20), dtype=int)
-    row = list(range(len(init_seqs)))
-    random.shuffle(row)
-    for i in range(len(init_seqs)):
-        init_seqs_new[i] = init_seqs[row[i]]
-    init_seq = init_seqs_new.reshape(-1)
-
-    return init_seq
-
-
-def nrzqpsk(init_seq, n):
-    symbol_num = int(len(init_seq) / 2)
-    tmp = init_seq
+def nrzqpsk(bitsq, n):
+    symbol_num = int(len(bitsq) / 2)
+    tmp = bitsq
     data = np.zeros(symbol_num * n, dtype=complex)
     for i in range(symbol_num):
         if tmp[i * 2] == 1 and tmp[i * 2 + 1] == 1:
@@ -245,14 +182,13 @@ def nrzqpsk(init_seq, n):
             Q = -np.pi * 3 / 4
         else:
             Q = -np.pi / 4
-        data[i * n: i * n + n] = np.exp(1j * Q)  # * Phi_p
-
+        data[i * n: i * n + n] = np.exp(1j * Q)
     return data
 
 
-def rzqpsk(init_seq, n):
-    symbol_num = int(len(init_seq) / 2)
-    tmp = (init_seq - 0.5) * 2
+def rzqpsk(bitsq, n):  # 平均入力パワー
+    symbol_num = int(len(bitsq) / 2)
+    tmp = (bitsq - 0.5) * 2
     tmp_i = tmp[::2]
     tmp_q = tmp[1::2]
     data_i = np.zeros(symbol_num * n, dtype=float)
@@ -261,14 +197,14 @@ def rzqpsk(init_seq, n):
         for j in range(n):
             data_i[i * n + j] = tmp_i[i] * np.sin(np.pi * j / n)
             data_q[i * n + j] = tmp_q[i] * np.sin(np.pi * j / n)
-    data = (data_i + 1j * data_q)# * np.sqrt(1 / 2)  # * Phi_p
+    data = (data_i + 1j * data_q)
 
     return data
 
 
-def nrzsixteenqam(init_seq, n):
-    symbol_num = int(len(init_seq) / 4)
-    tmp = init_seq
+def nrzsixteenqam(bitsq, n):
+    symbol_num = int(len(bitsq) / 4)
+    tmp = bitsq
     amp = 1 / np.sqrt(10)
     data = np.zeros(symbol_num * n, dtype=complex)
     for i in range(symbol_num):
@@ -288,14 +224,14 @@ def nrzsixteenqam(init_seq, n):
             amp_q = 3 * amp
         else:
             amp_q = 1 * amp
-        data[i * n: i * n + n] = sig_i * amp_i + 1j * sig_q * amp_q  # * Phi_p
+        data[i * n: i * n + n] = sig_i * amp_i + 1j * sig_q * amp_q
 
     return data
 
 
-def rzsixteenqam(init_seq, n):
-    symbol_num = int(len(init_seq) / 4)
-    tmp = init_seq
+def rzsixteenqam(bitsq, n):  # 平均入力パワー
+    symbol_num = int(len(bitsq) / 4)
+    tmp = bitsq
     amp = 1 / np.sqrt(10)
     data = np.zeros(symbol_num * n, dtype=complex)
     for i in range(symbol_num):
@@ -321,78 +257,30 @@ def rzsixteenqam(init_seq, n):
     return data
 
 
-def modulate(type='Normal', form='RZ16QAM', init_seq=None, N=11, n=32, itr=0):
-    mod_type = {'Normal': normal,
-                'WO': wo,
-                'RWO': rwo,
-                'R': r,
-                '8b10b': eightb_tenb}
+class Modulate:
+    def __init__(self, form='RZ16QAM', n=32):
+        self.form = form
+        self.n = n
 
-    mod_form = {'NRZQPSK': nrzqpsk,
-                'RZQPSK': rzqpsk,
-                'NRZ16QAM': nrzsixteenqam,
-                'RZ16QAM': rzsixteenqam}
-
-    if init_seq is None:
-        init_seq = mod_type[type](N, itr)
-        data = mod_form[form](init_seq, n)
-    else:
-        data = mod_form[form](init_seq, n)
-
-    return init_seq, data
-
-
-def modulate_multi(form, init_seqs, n):
-    mod_form = {'NRZQPSK': nrzqpsk,
-                'RZQPSK': rzqpsk,
-                'NRZ16QAM': nrzsixteenqam,
-                'RZ16QAM': rzsixteenqam}
-
-    shape_form = {'NRZQPSK': int(len(init_seqs[0]) * n / 2),
-                  'RZQPSK': int(len(init_seqs[0]) * n / 2),
-                  'NRZ16QAM': int(len(init_seqs[0]) * n / 4),
-                  'RZ16QAM': int(len(init_seqs[0]) * n / 4)}
-
-    data = np.zeros((len(init_seqs), shape_form[form]), dtype=complex)
-    init_seq = init_seqs.reshape(-1).copy()
-    data = mod_form[form](init_seq, n)
-    data = data.reshape((len(init_seqs), -1))
-
-    return data
+    def transform(self, sq):
+        mod_form = {'NRZQPSK': nrzqpsk,
+                    'RZQPSK': rzqpsk,
+                    'NRZ16QAM': nrzsixteenqam,
+                    'RZ16QAM': rzsixteenqam}
+        data = mod_form[self.form](sq, self.n)
+        return data
 
 
 if __name__ == '__main__':
 
     """検証用関数"""
-    def check_wo(N, mseq, init_seq):
-        init_seq = init_seq.copy()
-        for i in range(2 ** N):
-            init_seq[i * N: (i + 1) * N] -= mseq[i: i + N]
-        if init_seq.sum() == 0:
-            print('\033[32m' + ':) Function is correct.' + '\033[0m')
-        else:
-            print('\033[31m' + ':( Function is wrong.' + '\033[0m')
-
-    def check_rwo(N, mseq, init_seq):
-        init_seq = init_seq.copy()
-        for i in range(2 ** N):
-            for j in range(2 ** N):
-                if np.all(init_seq[i * N: (i + 1) * N] == mseq[j: j + N]):
-                    init_seq[i * N: (i + 1) * N] -= mseq[j: j + N]
-                    break
-        if init_seq.sum() == 0:
-            print('\033[32m' + ':) Function is correct.' + '\033[0m')
-        else:
-            print('\033[31m' + ':( Function is wrong.' + '\033[0m')
-
-
-    def check_qpsk(init_seq, qpsk, n):
-        init_seq_i = init_seq[::2] - 0.5
-        init_seq_q = init_seq[1::2] - 0.5
+    def check_qpsk(bitsq, qpsk, n):
+        bitsq_i = bitsq[::2] - 0.5
+        bitsq_q = bitsq[1::2] - 0.5
         qpsk_i = qpsk.real[int(n / 2):: n]
         qpsk_q = qpsk.imag[int(n / 2):: n]
-        if np.all(np.sign(init_seq_i) == np.sign(qpsk_i))\
-                and np.all(np.sign(init_seq_q) == np.sign(qpsk_q)):
+        if np.all(np.sign(bitsq_i) == np.sign(qpsk_i))\
+                and np.all(np.sign(bitsq_q) == np.sign(qpsk_q)):
             print('\033[32m' + ':) Function is correct.' + '\033[0m')
         else:
             print('\033[31m' + ':( Function is wrong.' + '\033[0m')
@@ -413,47 +301,12 @@ if __name__ == '__main__':
         ax.yaxis.set_tick_params(direction='in')
         plt.show()
 
+    bitsq = prbs(11)
 
-    def check_modulate_multi(init_seqs):
-        nrz = modulate_multi('NRZ16QAM', init_seqs, 32)
-        rz = modulate_multi('RZ16QAM', init_seqs, 32)
-        x_axis = np.arange(len(nrz[0]))
+    mdl0 = Modulate(form='NRZ16QAM', n=32)
+    nrzdata = mdl0.transform(bitsq)
 
-        fig = plt.figure()
-        ax = fig.add_subplot()
-        ax.plot(x_axis, nrz[0].real, label='nrz')
-        ax.plot(x_axis, rz[0].real, label='rz')
-        ax.legend()
-        ax.xaxis.set_tick_params(direction='in')
-        ax.yaxis.set_tick_params(direction='in')
-        plt.show()
+    mdl1 = Modulate(form='RZ16QAM', n=32)
+    rzdata = mdl1.transform(bitsq)
 
-
-    """
-    m_seq = mseq(7)
-    init_seqWO = wo(7)
-    init_seqRWO = rwo(7)
-
-    check_wo(7, m_seq, init_seqWO)
-    check_rwo(7, m_seq, init_seqRWO)
-
-    nrzqpskWO = nrzqpsk(init_seqWO, 32)
-    rzqpskWO = rzqpsk(init_seqWO, 32)
-    nrzsixteenqamWO = nrzsixteenqam(init_seqWO, 32)
-    rzsixteenqamWO = rzsixteenqam(init_seqWO, 32)
-
-    check_qpsk(init_seqWO, nrzqpskWO, 32)
-    check_qpsk(init_seqWO, rzqpskWO, 32)
-
-    compare_nrz_and_rz(nrzsixteenqamWO, rzsixteenqamWO, 32)
-    """
-    """
-    from pyopt.util import load_pickle
-
-    init_seqs = load_pickle('../dataset/init_seqs_8b10b.pickle')
-    rz = modulate_multi('RZ16QAM', init_seqs, 32)
-    check_modulate_multi(init_seqs)
-    """
-
-    # init_seq = eightb_tenb(1)
-    m_seq = mseq(7, 3)
+    compare_nrz_and_rz(nrzdata, rzdata, 32)
