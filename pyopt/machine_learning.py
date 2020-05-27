@@ -1,29 +1,31 @@
 import numpy as np
 from copy import deepcopy
 
+from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.model_selection import train_test_split
-#from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler
 
-from keras.models import Sequential
-from keras.layers import Dense
-from keras import optimizers
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+from tensorflow.keras import optimizers
 
 
-
-class StandardScaler:
+"""
+class StandardScaler(TransformerMixin, BaseEstimator):
     def __init__(self):
-        None
+        pass
 
-    def fit(self, x):
-        self.mean = np.mean(x)
-        self.std = np.std(x)
+    def fit(self, X, y=None):
+        self.mean_ = np.mean(X)
+        self.var_ = np.std(X)
+        return self
 
-    def transform(self, data):
-        return (data - self.mean) / self.std
+    def transform(self, X):
+        return (X - self.mean_) / self.var_
 
-    def inverse_transform(self, data):
-        return data * self.std + self.mean
-
+    def inverse_transform(self, X):
+        return X * self.var_ + self.mean_
+"""
 
 
 def datashaping(signal):
@@ -83,3 +85,34 @@ class ANN:
         p_data = self.model.predict(data)
         p_data = self.sc.inverse_transform(p_data)
         return p_data
+
+
+if __name__ == '__main__':
+
+    import pandas as pd
+    from sklearn.preprocessing import LabelEncoder
+    from sklearn.model_selection import train_test_split
+
+    df = pd.read_csv('https://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/wdbc.data',
+                     header=None)
+    X = df.loc[:, 2:].values
+    y = df.loc[:, 1].values
+    le = LabelEncoder()
+    y = le.fit_transform(y)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, stratify=y, random_state=1)
+
+    from sklearn.decomposition import PCA
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.pipeline import make_pipeline
+
+    pipe_lr = make_pipeline(StandardScaler(),
+                            PCA(n_components=2),
+                            LogisticRegression(random_state=1))
+    pipe_lr.fit(X_train, y_train)
+    y_pred = pipe_lr.predict(X_test)
+    print('Test Accuracy: %.3f' % pipe_lr.score(X_test, y_test))
+
+    """
+    from sklearn.utils.estimator_checks import check_estimator
+    check_estimator(StandardScaler)
+    """
