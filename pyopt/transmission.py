@@ -160,10 +160,11 @@ class Signal:
             tmp = self._add_ase_noise(tmp)  # 増幅と同時にASE雑音を加える
         self.signal['x_Lnow'] = tmp
         self.signal['Lnow'] += self.Ledfa
-        tmp_lc = deepcopy(tmp)
-        tmp_lc = self.linear_compensation(self.signal['Lnow'], tmp_lc)
-        tmp_lc = tmp_lc[int(self.n / 2):: self.n]
-        self.signal['x_'+str(self.signal['Lnow'])] = tmp_lc
+        if self.signal['Lnow'] % 500 == 0:
+            tmp_lc = deepcopy(tmp)
+            tmp_lc = self.linear_compensation(self.signal['Lnow'], tmp_lc)
+            tmp_lc = tmp_lc[int(self.n / 2):: self.n]
+            self.signal['x_'+str(self.signal['Lnow'])] = tmp_lc
 
     def linear_compensation(self, L, x):
         S = fft(x)
@@ -236,10 +237,13 @@ class Signal:
         return x
 
 
-def display(signal):
+def display_constellation(signal, dtype='complex'):
     fig = plt.figure()
     ax = fig.add_subplot()
-    line, = ax.plot(signal.real, signal.imag, '.')
+    if dtype == 'complex':
+        line, = ax.plot(signal.real, signal.imag, '.')
+    elif dtype == 'array':
+        line, = ax.plot(signal[:, 0], signal[:, 1], '.')
     # ax.legend()
     # ax.set_xlim((-150000, 150000))
     # ax.set_ylim((-150000, 150000))

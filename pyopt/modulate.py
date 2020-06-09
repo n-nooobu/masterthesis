@@ -3,6 +3,8 @@ import pandas as pd
 import pickle
 import random
 import matplotlib.pyplot as plt
+from tqdm import tqdm
+
 from pyopt.util import load_pickle
 
 
@@ -173,7 +175,8 @@ def nrzqpsk(bitsq, n):
     symbol_num = int(len(bitsq) / 2)
     tmp = bitsq
     data = np.zeros(symbol_num * n, dtype=complex)
-    for i in range(symbol_num):
+    print('nrzqpsk modulation START')
+    for i in tqdm(range(symbol_num)):
         if tmp[i * 2] == 1 and tmp[i * 2 + 1] == 1:
             Q = np.pi / 4
         elif tmp[i * 2] == 0 and tmp[i * 2 + 1] == 1:
@@ -193,7 +196,8 @@ def rzqpsk(bitsq, n):  # 平均入力パワー
     tmp_q = tmp[1::2]
     data_i = np.zeros(symbol_num * n, dtype=float)
     data_q = np.zeros(symbol_num * n, dtype=float)
-    for i in range(symbol_num):
+    print('rzqpsk modulation START')
+    for i in tqdm(range(symbol_num)):
         for j in range(n):
             data_i[i * n + j] = tmp_i[i] * np.sin(np.pi * j / n)
             data_q[i * n + j] = tmp_q[i] * np.sin(np.pi * j / n)
@@ -207,7 +211,8 @@ def nrzsixteenqam(bitsq, n):
     tmp = bitsq
     amp = 1 / np.sqrt(10)
     data = np.zeros(symbol_num * n, dtype=complex)
-    for i in range(symbol_num):
+    print('nrz16QAM modulation START')
+    for i in tqdm(range(symbol_num)):
         if tmp[i * 4] == 0:
             sig_i = -1
         else:
@@ -234,7 +239,8 @@ def rzsixteenqam(bitsq, n):  # 平均入力パワー
     tmp = bitsq
     amp = 1 / np.sqrt(10)
     data = np.zeros(symbol_num * n, dtype=complex)
-    for i in range(symbol_num):
+    print('rz16QAM modulation START')
+    for i in tqdm(range(symbol_num)):
         if tmp[i * 4] == 0:
             sig_i = -1
         else:

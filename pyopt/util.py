@@ -1,5 +1,6 @@
 import numpy as np
 import pickle
+from tqdm import tqdm
 
 
 def fft(x):
@@ -35,3 +36,13 @@ def load_pickle(path):
     with open(path, 'rb') as f:
         data = pickle.load(f)
     return data
+
+
+def image_to_binary(image):
+    image_decimal = image.reshape(-1)
+    image_binary = np.zeros(len(image_decimal) * 8, dtype=int)
+    print('image to binary START')
+    for byte in tqdm(range(len(image_decimal))):
+        for bit in range(8):
+            image_binary[byte * 8 + bit] = min(1 << (7 - bit) & image_decimal[byte], 1)
+    return image_binary
