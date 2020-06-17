@@ -7,7 +7,7 @@ from sklearn.preprocessing import StandardScaler
 
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Dense, Conv1D, Flatten
 from tensorflow.keras import optimizers
 
 
@@ -73,7 +73,7 @@ class ANNClass001(BaseEstimator, RegressorMixin):
 
     def fit(self, X, y):
         self.model = Sequential()
-        self.model.add(Dense(100, input_dim=len(X[0]), activation="relu"))
+        self.model.add(Dense(10, input_dim=len(X[0]), activation="relu"))
         self.model.add(Dense(3, activation="softmax"))
         # self.model.summary()
         adam = optimizers.Adam(lr=self.lr, beta_1=0.9, beta_2=0.999, decay=0, amsgrad=False)
@@ -86,6 +86,32 @@ class ANNClass001(BaseEstimator, RegressorMixin):
 
 
 class ANNReg001(BaseEstimator, RegressorMixin):
+    def __init__(self, neuron=10, epochs=300, lr=0.001, log=True):
+        self.neuron = neuron
+        self.epochs = epochs
+        self.lr = lr
+        self.log = log
+        if self.log:
+            self.verbose = 2
+        else:
+            self.verbose = 0
+        self.model = Sequential()
+
+    def fit(self, X, y):
+        self.model.add(Dense(self.neuron, input_dim=len(X[0]), activation="relu"))
+        self.model.add(Dense(2))
+        if self.log:
+            self.model.summary()
+        adam = optimizers.Adam(lr=self.lr, beta_1=0.9, beta_2=0.999, decay=0, amsgrad=False)
+        self.model.compile(loss='mean_squared_error', optimizer=adam, metrics=['mse'])
+        history = self.model.fit(X, y, epochs=self.epochs, batch_size=100, verbose=self.verbose, validation_split=0.1)
+        return self
+
+    def predict(self, X):
+        return self.model.predict(X)
+
+
+class CNNReg001(BaseEstimator, RegressorMixin):
     def __init__(self, epochs=300, lr=0.001, log=True):
         self.epochs = epochs
         self.lr = lr
@@ -97,7 +123,10 @@ class ANNReg001(BaseEstimator, RegressorMixin):
         self.model = Sequential()
 
     def fit(self, X, y):
-        self.model.add(Dense(10, input_dim=len(X[0]), activation="relu"))
+        X = X.reshape(len(X), len(X[0]), 1)
+        self.model.add(Conv1D(16, 4, padding='valid', input_shape=(len(X[0, :]), 1), activation='relu'))
+        self.model.add(Flatten())
+        self.model.add(Dense(10))
         self.model.add(Dense(2))
         if self.log:
             self.model.summary()
@@ -107,6 +136,7 @@ class ANNReg001(BaseEstimator, RegressorMixin):
         return self
 
     def predict(self, X):
+        X = X.reshape(len(X), len(X[0]), 1)
         return self.model.predict(X)
 
 
