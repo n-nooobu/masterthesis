@@ -238,7 +238,7 @@ class Signal:
 
 
 def display_constellation(signal, dtype='complex'):
-    fig = plt.figure()
+    fig = plt.figure(figsize=(6, 6))
     ax = fig.add_subplot()
     if dtype == 'complex':
         line, = ax.plot(signal.real, signal.imag, '.')
@@ -249,6 +249,15 @@ def display_constellation(signal, dtype='complex'):
     # ax.set_ylim((-150000, 150000))
     ax.xaxis.set_tick_params(direction='in')
     ax.yaxis.set_tick_params(direction='in')
+    plt.tick_params(labelbottom=False,
+                    labelleft=False,
+                    labelright=False,
+                    labeltop=False)
+    plt.tick_params(bottom=False,
+                    left=False,
+                    right=False,
+                    top=False)
+    plt.subplots_adjust(left=0.05, bottom=0.05, right=0.95, top=0.95)
     plt.show()
 
 

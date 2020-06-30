@@ -20,6 +20,7 @@ tap = 1
 list0 = [n for n in range(10)]
 epochs = np.array([150, 200, 250, 300, 350, 400, 450, 500])
 neuron = np.array([10, 20, 40, 80, 160, 320, 640, 1280])
+"""
 # neuron = np.logspace(3.4, 10, 8, base=2).astype(np.int32)
 evm = np.zeros((8, 8), dtype=float)
 best_score = 100
@@ -67,8 +68,8 @@ for e_idx, e in enumerate(epochs):
             best_params['epochs'] = e
 
 np.savetxt('result/result003b_01.csv', evm, delimiter=',')
-
-# evm = np.loadtxt('result/result003b_01.csv', delimiter=',')
+"""
+evm = np.loadtxt('result/result003b_01.csv', delimiter=',')
 
 
 fig, ax = plt.subplots()
@@ -80,14 +81,15 @@ evm_sort = np.sort(evm.reshape(-1))
 for i in range(8):
     for j in range(8):
         if evm[i][j] == evm_sort[10] and flag[0]:
-            ax.scatter(epochs[j], neuron[i], c='darkblue', s=50 + (evm[i][j] - 1) * 900 / 7, label=str(evm[i][j]) + '%')
+            ax.scatter(epochs[j], neuron[i], c='darkblue', s=50 + (evm[i][j] - 25) * 900 / 7, label='{0}%'.format(np.round(evm[i][j], decimals=1)))
             flag[0] = False
         elif evm[i][j] == evm_sort[32] and flag[1]:
-            ax.scatter(epochs[j], neuron[i], c='darkblue', s=50 + (evm[i][j] - 1) * 900 / 7, label=str(evm[i][j]) + '%')
+            ax.scatter(epochs[j], neuron[i], c='darkblue', s=50 + (evm[i][j] - 25) * 900 / 7, label='{0}%'.format(np.round(evm[i][j], decimals=1)))
             flag[1] = False
         elif evm[i][j] == evm_sort[-10] and flag[2]:
-            ax.scatter(epochs[j], neuron[i], c='darkblue', s=50 + (evm[i][j] - 1) * 900 / 7, label=str(evm[i][j]) + '%')
+            ax.scatter(epochs[j], neuron[i], c='darkblue', s=50 + (evm[i][j] - 25) * 900 / 7, label='{0}%'.format(np.round(evm[i][j], decimals=1)))
             flag[2] = False
         else:
-            ax.scatter(epochs[j], neuron[i], c='darkblue', s=50 + (evm[i][j] - 1) * 900 / 7)
-plt.legend(bbox_to_anchor=(1.4, 0.9), labelspacing=1.8, prop={'size': 20})
+            ax.scatter(epochs[j], neuron[i], c='darkblue', s=50 + (evm[i][j] - 25) * 900 / 7)
+plt.legend(bbox_to_anchor=(1.0, 0.9), labelspacing=1.8, prop={'size': 13}, title="EVM[%]")
+plt.subplots_adjust(left=0.10, bottom=0.10, right=0.78, top=0.95)
