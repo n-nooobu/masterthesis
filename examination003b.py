@@ -74,8 +74,8 @@ evm = np.loadtxt('result/result003b_01.csv', delimiter=',')
 
 fig, ax = plt.subplots()
 ax.set_yscale('log')
-ax.set_xlabel('epochs')
-ax.set_ylabel('neuron')
+ax.set_xlabel('epochs', fontsize=18)
+ax.set_ylabel('neuron', fontsize=18)
 flag = [True, True, True]
 evm_sort = np.sort(evm.reshape(-1))
 for i in range(8):
@@ -91,5 +91,7 @@ for i in range(8):
             flag[2] = False
         else:
             ax.scatter(epochs[j], neuron[i], c='darkblue', s=50 + (evm[i][j] - 25) * 900 / 7)
+plt.xticks(fontsize=16)
+plt.yticks(fontsize=16)
 plt.legend(bbox_to_anchor=(1.0, 0.9), labelspacing=1.8, prop={'size': 13}, title="EVM[%]")
-plt.subplots_adjust(left=0.10, bottom=0.10, right=0.78, top=0.95)
+plt.subplots_adjust(left=0.13, bottom=0.15, right=0.78, top=0.98)

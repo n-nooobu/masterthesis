@@ -180,13 +180,13 @@ line, = ax.plot(n, result[6], '-s', color=[214/255, 39/255, 40/255], label='rand
 line, = ax.plot(n, result[7], '--', color=[214/255, 39/255, 40/255], label='random(linear compensation and phase rotation)')
 line, = ax.plot(n, result[8], '-s', color=[180/255, 167/255, 27/255], label='PRBS16(ANN trained on image0)')
 line, = ax.plot(n, result[9], '--', color=[180/255, 167/255, 27/255], label='PRBS16(linear compensation and phase rotation)')
-plt.legend(bbox_to_anchor=(1.03, 1), loc='upper left', borderaxespad=0)
-plt.xlabel('Number of Taps')
-plt.ylabel('EVM[%]')
+plt.legend(bbox_to_anchor=(1.01, 1), loc='upper left', borderaxespad=0, prop={'size': 15})
+plt.xlabel('Number of Taps', fontsize=18)
+plt.ylabel('EVM[%]', fontsize=18)
 # ax.set_ylim((18, 33))
 ax.xaxis.set_tick_params(direction='in')
 ax.yaxis.set_tick_params(direction='in')
-plt.subplots_adjust(left=0.05, bottom=0.10, right=0.60, top=0.95)
+plt.subplots_adjust(left=0.05, bottom=0.10, right=0.50, top=0.95)
 plt.show()
 
 
