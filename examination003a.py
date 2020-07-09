@@ -1,44 +1,13 @@
-import os
-import glob
-from random import randint
 import numpy as np
 import matplotlib.pyplot as plt
-import cv2
-from tqdm import tqdm
-from multiprocessing import Process
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import make_pipeline
 
-from pyopt.modulate import prbs, Modulate, eightb_tenb, image_to_binary
-from pyopt import transmission as tr
 from pyopt import machine_learning as ml
 from pyopt.util import save_pickle, load_pickle
 
-
-"""長距離伝送シミュレーション"""
-"""
-# image_path = glob.glob(os.path.join('./image/train/', '*.jpg'))
-# image = cv2.imread(image_path[9])[::10, ::10].reshape(-1)
-# image_binary = image_to_binary(image)
-# image_binary = eightb_tenb(image)
-bitsq = prbs(N=17, itr=0)
-# random = np.random.randint(0, 2, 100000)
-# random = np.array([randint(0, 1) for i in range(100000)])
-
-mdl = Modulate('RZ16QAM')
-sq = mdl.transform(bitsq)
-
-# sgnl = tr.Signal(seq=sq, form='RZ16QAM', PdBm=1)
-sgnl_ase = tr.Signal(seq=sq, form='RZ16QAM', PdBm=1)
-
-# sgnl.transmission(Lmax=2500, ase=False)
-# save_pickle(sgnl, 'dataset/trans_signal_image004_ver.1.0.pickle')
-
-sgnl_ase.transmission(Lmax=2500, ase=True)
-save_pickle(sgnl_ase, 'dataset/trans_signal_PRBS17_ase_ver.1.0.pickle')
-"""
 
 ml.GPU_off()
 ml.log_off()

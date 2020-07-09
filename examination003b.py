@@ -1,12 +1,10 @@
-import random
 import numpy as np
 import matplotlib.pyplot as plt
-from tqdm import tqdm
+import random
 
 from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_score
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import make_pipeline
-from sklearn.metrics import make_scorer
 
 from pyopt import machine_learning as ml
 from pyopt.util import save_pickle, load_pickle
@@ -20,7 +18,7 @@ tap = 1
 list0 = [n for n in range(10)]
 epochs = np.array([150, 200, 250, 300, 350, 400, 450, 500])
 neuron = np.array([10, 20, 40, 80, 160, 320, 640, 1280])
-"""
+
 # neuron = np.logspace(3.4, 10, 8, base=2).astype(np.int32)
 evm = np.zeros((8, 8), dtype=float)
 best_score = 100
@@ -68,7 +66,7 @@ for e_idx, e in enumerate(epochs):
             best_params['epochs'] = e
 
 np.savetxt('result/result003b_01.csv', evm, delimiter=',')
-"""
+
 evm = np.loadtxt('result/result003b_01.csv', delimiter=',')
 
 

@@ -1,5 +1,6 @@
 import os
 import glob
+import timeit
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -11,34 +12,19 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import make_pipeline
 from sklearn.metrics import make_scorer
 
-from pyopt.modulate import prbs, Modulate
+from pyopt.modulate import prbs, Modulate, eightb_tenb, image_to_binary
 from pyopt import transmission as tr
 from pyopt import machine_learning as ml
 from pyopt.util import save_pickle, load_pickle
-
-"""
-image_path = glob.glob(os.path.join('./image/train/', '*.jpg'))
-image = cv2.imread(image_path[0])
-image_decimal = image.reshape(-1)
-image_binary = np.zeros(len(image_decimal) * 8, dtype=int)
-for byte in tqdm(range(len(image_decimal))):
-    for bit in range(8):
-        image_binary[byte * 8 + bit] = min(1 << (7 - bit) & image_decimal[byte], 1)
-
-# save_pickle(frame_binary, 'dataset/init_seqs_sample_video001_01.pickle')
-"""
 
 """
 # 15次PRBS配列を生成し,16QAMに変調する
 bitsq = prbs(N=15, itr=0)
 mdl = Modulate('RZ16QAM')
 sq = mdl.transform(bitsq)
-
-# 伝送信号と伝送パラメータを補完するクラスSignalを生成し,伝送する
-sgnl = tr.Signal(seq=sq, form='RZ16QAM', PdBm=0)
-sgnl.transmission(Lmax=1000, ase=True)
-save_pickle(sgnl, 'dataset/trans_signal_PRBS15_ver.1.0.pickle')
 """
+
+
 """
 # ml.GPU_restrict()
 ml.GPU_off()
@@ -65,7 +51,7 @@ scores_ann = cross_val_score(estimator=pipe,
                              scoring=make_scorer(ml.evm_score, greater_is_better=False),
                              cv=10, n_jobs=1)
 """
-
+"""
 epochs = np.array([150, 200, 250, 300, 350, 400, 450, 500])
 neuron = np.logspace(1, 10, 8, base=2)
 evm = [[1, 2, 3, 4, 5, 6, 7, 8], [5, 5, 5, 5, 5, 5, 5, 5], [2, 2, 2, 2, 2, 2, 2, 2], [5, 6, 3, 2, 7, 3, 2, 5],
@@ -91,3 +77,5 @@ for i in range(8):
         else:
             ax.scatter(epochs[j], neuron[i], c='darkblue', s=50 + (evm[i][j] - 1) * 900 / 7)
 plt.legend(bbox_to_anchor=(1.4, 0.9), labelspacing=1.8, prop={'size': 20})
+"""
+
