@@ -1,5 +1,7 @@
-import numpy as np
 import os
+import copy
+import random
+import numpy as np
 
 from sklearn.base import BaseEstimator, TransformerMixin, RegressorMixin
 from sklearn.model_selection import train_test_split
@@ -53,6 +55,23 @@ def evm_score(y_true, y_pred):
         tmp += abs(y_pred[i] - y_true[i]) ** 2 / abs(y_true[i]) ** 2
     evm = np.sqrt(tmp / len(y_pred)) * 100
     return evm
+
+
+def KFold(n_all, n_splits, shuffle):
+    n_test = int(n_all / n_splits)
+    l = [i for i in range(n_all)]
+    if shuffle:
+        l = random.sample(l, len(l))
+    kf_train = []
+    kf_test = []
+    for i in range(n_splits):
+        tmp_train = copy.deepcopy(l)
+        tmp_test = tmp_train[i * n_test: (i + 1) * n_test]
+        for j in range(n_test):
+            tmp_train.pop(i * n_test)
+        kf_train.append(tmp_train)
+        kf_test.append(tmp_test)
+    return [kf_train, kf_test]
 
 
 def data_shaping_with_overlapping(input, signal, max_tap, tap):
@@ -159,6 +178,7 @@ def log_off():
 
 
 if __name__ == '__main__':
+    """
     from matplotlib.colors import ListedColormap
     import matplotlib.pyplot as plt
     def plot_decision_regions(X, y, classifier, one_hot=False, test_idx=None, resolution=0.02):
@@ -236,7 +256,7 @@ if __name__ == '__main__':
     pipe_ann = make_pipeline(StandardScaler(),
                              ANNClass001(epochs=10, lr=1.0))
     pipe_ann.fit(X_train, y_train_oh)
-
+    """
 
     """
     # グリッドサーチを行う
@@ -270,7 +290,7 @@ if __name__ == '__main__':
                                  X=X_train, y=y_train_oh,
                                  cv=10, n_jobs=1)
     """
-
+    """
     # 決定領域をプロット
     plot_decision_regions(X=X_combined, y=y_combined, classifier=pipe_ann, one_hot=True, test_idx=range(105, 150))
     plt.xlabel('petal length [standardized]')
@@ -278,4 +298,5 @@ if __name__ == '__main__':
     plt.legend(loc='upper left')
     plt.tight_layout()
     plt.show()
-
+    """
+    kf = KFold(10, 5, True)
