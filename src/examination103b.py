@@ -1,6 +1,4 @@
-import random
 import numpy as np
-import matplotlib.pyplot as plt
 from tqdm import tqdm
 from multiprocessing import Process, Manager
 
@@ -10,19 +8,7 @@ from sklearn.pipeline import make_pipeline
 from pyopt import machine_learning as ml
 from pyopt.util import save_pickle, load_pickle
 
-"""
-# list0 = [i for i in range(number)]
-# list1 = random.sample(list0, 10)
 
-result = {'evm_scores': np.zeros((8, 8), dtype=float),
-          'best_evm_score': 100,
-          'best_params': {'neuron': 0, 'epochs': 0}}
-
-        if score_mean < best_score:
-            best_score = score_mean
-            best_params['neuron'] = n
-            best_params['epochs'] = e
-"""
 def cross_val(tap, n_idx, neuron, e_idx, epochs, n_all, n_splits, result):
     print('neuron: ' + str(neuron) + ', epochs: ' + str(epochs) + '......START')
     scores = []

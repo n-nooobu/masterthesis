@@ -1,5 +1,5 @@
 venv/
 .idea/
-dataset/
+data/
 image/
-result/
+.ipynb_checkpoints/

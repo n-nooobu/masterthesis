@@ -79,3 +79,6 @@ for i in range(8):
 plt.legend(bbox_to_anchor=(1.4, 0.9), labelspacing=1.8, prop={'size': 20})
 """
 
+for i in range(100):
+    tmp = load_pickle('data/input/train_0/train_0' + str(i).zfill(5) + '_10_8B10B.pickle')
+    save_pickle(tmp, 'data/input/train_0/train_0_' + str(i).zfill(5) + '_10_8B10B.pickle')
