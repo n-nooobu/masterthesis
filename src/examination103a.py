@@ -14,14 +14,14 @@ def iteration_1step(process_index, tap, result):
         print('end')
         return
 
-    number_of_train_data = 130
+    number_of_train_data = 30
     X_train = np.array([])
     y_train = np.array([])
     evm_train = 0
     for train_idx in range(number_of_train_data):
         image = load_pickle('../data/input/train_0/train_0_' + str(train_idx).zfill(5) + '_10_8B10B.pickle')
         evm_train += image.cal_evm_pr(2500)
-        X_tmp, y_tmp = ml.data_shaping_with_overlapping(image.signal['x_0'], image.signal['x_2500'], 49, tap)
+        X_tmp, y_tmp = ml.data_shaping_with_overlapping(image.signal['x_0'], image.signal['x_2500'], 501, tap)
         X_train = np.append(X_train, X_tmp).reshape(-1, tap * 2)
         y_train = np.append(y_train, y_tmp).reshape(-1, 2)
     sc_y = StandardScaler()
@@ -34,7 +34,7 @@ def iteration_1step(process_index, tap, result):
     for test_idx in range(number_of_test_data):
         image = load_pickle('../data/input/test/test_' + str(test_idx).zfill(5) + '_10_8B10B.pickle')
         evm_test0 += image.cal_evm_pr(2500)
-        X_tmp, y_tmp = ml.data_shaping_with_overlapping(image.signal['x_0'], image.signal['x_2500'], 49, tap)
+        X_tmp, y_tmp = ml.data_shaping_with_overlapping(image.signal['x_0'], image.signal['x_2500'], 501, tap)
         X_test0 = np.append(X_test0, X_tmp).reshape(-1, tap * 2)
         y_test0 = np.append(y_test0, y_tmp).reshape(-1, 2)
     y_test0_std = sc_y.transform(y_test0)
@@ -45,7 +45,7 @@ def iteration_1step(process_index, tap, result):
     for test_idx in range(number_of_test_data, 2 * number_of_test_data):
         image = load_pickle('../data/input/test/test_' + str(test_idx).zfill(5) + '_10_8B10B.pickle')
         evm_test1 += image.cal_evm_pr(2500)
-        X_tmp, y_tmp = ml.data_shaping_with_overlapping(image.signal['x_0'], image.signal['x_2500'], 49, tap)
+        X_tmp, y_tmp = ml.data_shaping_with_overlapping(image.signal['x_0'], image.signal['x_2500'], 501, tap)
         X_test1 = np.append(X_test1, X_tmp).reshape(-1, tap * 2)
         y_test1 = np.append(y_test1, y_tmp).reshape(-1, 2)
     y_test1_std = sc_y.transform(y_test1)
@@ -70,12 +70,12 @@ def iteration_1step(process_index, tap, result):
 def loop_multiprocessing(result=None):
     manager = Manager()
     if result is None:
-        result = manager.dict({'evm_scores': np.zeros((6, 25), dtype=float)})
+        result = manager.dict({'evm_scores': np.zeros((6, 20), dtype=float)})
     else:
         result = manager.dict({'evm_scores': result})
     process_list = []
     tap_list = [i * 10 + 1 for i in range(20)]
-    for i, tap in enumerate(np.arange(1, 50, 2)):
+    for i, tap in enumerate(tap_list):
         process = Process(
             target=iteration_1step,
             kwargs={'process_index': i, 'tap': tap, 'result': result})
@@ -91,10 +91,10 @@ if __name__ == '__main__':
     ml.GPU_off()
     ml.log_off()
 
-    result = np.loadtxt('../results/result103a_11.csv', delimiter=',')
+    result = np.loadtxt('../results/result103a_22.csv', delimiter=',')
     result = loop_multiprocessing(result)
     evm_scores = result['evm_scores']
-    np.savetxt('../results/result103a_11.csv', evm_scores, delimiter=',')
+    np.savetxt('../results/result103a_22.csv', evm_scores, delimiter=',')
     """
     result = np.loadtxt('../results/result103a_02.csv', delimiter=',')
 

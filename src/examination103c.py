@@ -78,34 +78,10 @@ if __name__ == '__main__':
 
     # 最適化を実行
     # study = optuna.create_study()
-    study = load_pickle('results/optuna007.pickle')
-    study.optimize(objective, n_trials=5)
-    """
-    # 結果をプロットする為に値を加工
-    values = [each.value for each in study.trials]
-    best_values = [np.min(values[:k + 1]) for k in range(len(values))]
-    n = [each.params['neuron'] for each in study.trials]
-    e = [each.params['epochs'] for each in study.trials]
+    # study = load_pickle('../results/optuna007.pickle')
+    # study.optimize(objective, n_trials=5)
 
-    # プロット関数
-    def f(k):
-        plt.figure(figsize=(9, 4.5))
-        ax = plt.subplot(121)
-        #ax.set_xlim(np.min(x) - 5, np.max(x) + 5)
-        #ax.set_ylim(np.min(values) - 300, np.max(values) + 300)
-        ax.scatter(e[:k], n[:k], c=values[:k], cmap='Blues')
-        ax.scatter(e[k-1], n[k-1])
-
-        ax = plt.subplot(122)
-        ax.plot(best_values[:k])
-        ax.set_yscale('log')
-        plt.show()
-
-    # ipywidgetで表示
-    play = Play(value=1, min=0, max=len(study.trials), step=1, interval=500, description='Press play')
-    slider = IntSlider(min=0, max=len(study.trials))
-    jslink((play, 'value'), (slider, 'value'))
-    ui = HBox([play, slider])
-    out = interactive_output(f, {'k': slider})
-    display(ui, out)
-    """
+    tap = 1
+    n_all = 10
+    n_splits = 5
+    score = cross_val(tap, 468, 488, n_all, n_splits)
