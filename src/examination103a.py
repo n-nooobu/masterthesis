@@ -14,7 +14,7 @@ def iteration_1step(process_index, tap, result):
         print('end')
         return
 
-    number_of_train_data = 30
+    number_of_train_data = 100
     X_train = np.array([])
     y_train = np.array([])
     evm_train = 0
@@ -50,12 +50,24 @@ def iteration_1step(process_index, tap, result):
         y_test1 = np.append(y_test1, y_tmp).reshape(-1, 2)
     y_test1_std = sc_y.transform(y_test1)
 
+    N17 = load_pickle('../data/input/N17.pickle')
+    evm_N17 = N17.cal_evm_pr(2500)
+    X_N17, y_N17 = ml.data_shaping_with_overlapping(N17.signal['x_0'], N17.signal['x_2500'], 501, tap)
+    y_N17_std = sc_y.transform(y_N17)
+
+    random = load_pickle('../data/input/random00000.pickle')
+    evm_random = random.cal_evm_pr(2500)
+    X_random, y_random = ml.data_shaping_with_overlapping(random.signal['x_0'], random.signal['x_2500'], 501, tap)
+    y_random_std = sc_y.transform(y_random)
+
     pipe = make_pipeline(StandardScaler(),
-                         ml.ANNReg001(neuron=300, epochs=500, lr=0.001, log=False))
+                         ml.ANNReg001(neuron=300, epochs=500, lr=0.001, log=True))
     pipe.fit(X_train, y_train_std)
     y_train_pred = pipe.predict(X_train)
     y_test0_pred = pipe.predict(X_test0)
     y_test1_pred = pipe.predict(X_test1)
+    y_N17_pred = pipe.predict(X_N17)
+    y_random_pred = pipe.predict(X_random)
 
     tmp = result['evm_scores']
     tmp[0, process_index] = ml.evm_score(y_train_std, y_train_pred)
@@ -64,17 +76,21 @@ def iteration_1step(process_index, tap, result):
     tmp[3, process_index] = evm_test0 / number_of_test_data
     tmp[4, process_index] = ml.evm_score(y_test1_std, y_test1_pred)
     tmp[5, process_index] = evm_test1 / number_of_test_data
+    tmp[6, process_index] = ml.evm_score(y_N17_std, y_N17_pred)
+    tmp[7, process_index] = evm_N17
+    tmp[8, process_index] = ml.evm_score(y_random_std, y_random_pred)
+    tmp[9, process_index] = evm_random
     result['evm_scores'] = tmp
 
 
 def loop_multiprocessing(result=None):
     manager = Manager()
     if result is None:
-        result = manager.dict({'evm_scores': np.zeros((6, 20), dtype=float)})
+        result = manager.dict({'evm_scores': np.zeros((10, 20), dtype=float)})
     else:
         result = manager.dict({'evm_scores': result})
     process_list = []
-    tap_list = [i * 10 + 1 for i in range(20)]
+    tap_list = [i * 5 + (1 - i % 2) for i in range(20)]
     for i, tap in enumerate(tap_list):
         process = Process(
             target=iteration_1step,
@@ -87,14 +103,14 @@ def loop_multiprocessing(result=None):
 
 
 if __name__ == '__main__':
-
+    # ml.GPU_restrict()
     ml.GPU_off()
     ml.log_off()
 
-    result = np.loadtxt('../results/result103a_22.csv', delimiter=',')
-    result = loop_multiprocessing(result)
+    # result = np.loadtxt('../results/result103a_31.csv', delimiter=',')
+    result = loop_multiprocessing()
     evm_scores = result['evm_scores']
-    np.savetxt('../results/result103a_22.csv', evm_scores, delimiter=',')
+    np.savetxt('../results/result103a_40.csv', evm_scores, delimiter=',')
     """
     result = np.loadtxt('../results/result103a_02.csv', delimiter=',')
 

@@ -2,6 +2,7 @@ import os
 import copy
 import random
 import numpy as np
+from pyopt.util import load_pickle
 
 from sklearn.base import BaseEstimator, TransformerMixin, RegressorMixin
 from sklearn.model_selection import train_test_split
@@ -11,37 +12,6 @@ import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Conv1D, Flatten
 from tensorflow.keras import optimizers
-
-#import torch.nn as nn
-#import torch.nn.functional as F
-
-
-"""
-class StandardScaler(TransformerMixin, BaseEstimator):
-    def __init__(self):
-        pass
-
-    def fit(self, X, y=None):
-        self.mean_ = np.mean(X)
-        self.var_ = np.std(X)
-        return self
-
-    def transform(self, X):
-        return (X - self.mean_) / self.var_
-
-    def inverse_transform(self, X):
-        return X * self.var_ + self.mean_
-"""
-
-"""
-def train_test_split(x, y, test_size):
-    idx = int(len(x) * test_size)
-    x_train = x[:-idx - 29:]
-    x_test = x[-idx::]
-    y_train = y[:-idx - 29:]
-    y_test = y[-idx::]
-    return x_train, x_test, y_train, y_test
-"""
 
 
 def accuracy_score_one_hot(y_true, y_pred):
@@ -88,6 +58,7 @@ def data_shaping_with_overlapping(input, signal, max_tap, tap):
     return X, y
 
 
+# tensorflow.keras
 class ANNClass001(BaseEstimator, RegressorMixin):
     def __init__(self, epochs=300, lr=0.001):
         self.epochs = epochs

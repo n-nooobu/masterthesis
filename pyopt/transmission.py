@@ -263,18 +263,28 @@ def display_constellation(signal, dtype='complex'):
 
 if __name__ == '__main__':
     """
-    bitsq = prbs(N=11, itr=0)
+    bitsq = prbs(N=17, itr=0)
     mdl = Modulate('RZ16QAM')
     sq = mdl.transform(bitsq)
+    
+    sgnl = Signal(seq=sq, form='RZ16QAM')
+    sgnl.transmission(Lmax=2500, ase=True)
+    """
+    # save_pickle(sgnl, '../data/input/N17.pickle')
+
+    random = np.random.randint(0, 2, 100000)
+    mdl = Modulate('RZ16QAM')
+    sq = mdl.transform(random)
 
     sgnl = Signal(seq=sq, form='RZ16QAM')
-    sgnl.transmission(Lmax=1000, ase=True)
-    """
+    sgnl.transmission(Lmax=2500, ase=True)
+
+    save_pickle(sgnl, '../data/input/random00000.pickle')
 
     """
     16QAM信号のEVM特性検証
     熊本氏修士論文 P.50 Fig.4.19と比較
-    """
+    
     bitsq = prbs(N=11, itr=0)
     mdl = Modulate('RZ16QAM')
     sq = mdl.transform(bitsq)
@@ -287,5 +297,4 @@ if __name__ == '__main__':
         EVM = sgnl.cal_evm_pr(1500)
         print(EVM)
         EVM_result[i] = EVM
-
-    # save_pickle(trans_signal, 'dataset/trans_signal_tmp.pickle')
+    """

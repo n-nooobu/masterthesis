@@ -1,25 +1,38 @@
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
+from matplotlib import rcParams
+from matplotlib.patches import ArrowStyle
 
 """
-https://www.soumu.go.jp/menu_news/s-news/01kiban04_02000160.html
-https://www.soumu.go.jp/main_content/000671256.pdf
+https://www.soumu.go.jp/menu_news/s-news/01kiban04_02000171.html
+https://www.soumu.go.jp/main_content/000699741.pdf
 """
 
-n = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11])
-data = np.array([2889, 3560, 4448, 5467, 6840, 8232, 8027, 8903, 10289, 10976, 12086, 12650])
+rcParams['font.family'] = 'IPAexGothic'
+
+n = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
+data = np.array([2889, 3560, 4448, 5467, 6840, 8232, 8027, 8903, 10289, 10976, 12086, 12650, 19025])
 
 fig, ax = plt.subplots()
 ax.plot(n, data, '-o')
+ax.annotate(s='', xy=[10, 19175], xytext=[10, 12086],
+            arrowprops=dict(arrowstyle=ArrowStyle('simple', head_length=0.1, head_width=0.1, tail_width=0.1),
+                            connectionstyle='arc3', facecolor='red', edgecolor='red'))
+ax.annotate(s='', xy=[12, 19025], xytext=[9.93, 19025],
+            arrowprops=dict(arrowstyle=ArrowStyle('simple', head_length=1, head_width=1, tail_width=0.1),
+                            connectionstyle='arc3',facecolor='red', edgecolor='red'))
+ax.text(11.3, 19625, '19,025', color='red', fontsize=15)
+ax.text(9.7, 10676, '12,086', color='red', fontsize=15)
+ax.text(6.3, 16625, '57%増加', color='red', fontsize=21)
 plt.ylabel('Download traffic[Gbps]')
-ax.set_xlim((-0.7, 10.7))
-ax.set_ylim((1500, 14000))
+ax.set_xlim((-0.7, 13.2))
+ax.set_ylim((1500, 22000))
 ax.set_xticks(np.linspace(0, 12, 13))
-ax.set_xticklabels(['2014-5', '2014-11', '2015-5', '2015-11', '2016-5', '2016-11', '2017-5', '2017-11', '2018-5', '2018-11', '2019-5', '2019-11'])
+ax.set_xticklabels(['2014年5月', '2014年11月', '2015年5月', '2015年11月', '2016年5月', '2016年11月', '2017年5月',
+                    '2017年11月', '2018年5月', '2018年11月', '2019年5月', '2019年11月', '2020年5月'])
 plt.gcf().autofmt_xdate()
 plt.grid(which='major', axis='both', color='#999999', linestyle='--')
 ax.xaxis.set_tick_params(direction='in')
 ax.yaxis.set_tick_params(direction='in')
+plt.subplots_adjust(left=0.13, bottom=0.14, right=0.97, top=0.97)
 plt.show()
