@@ -27,7 +27,7 @@ def iteration_1step(process_index, tap, result):
     sc_y = StandardScaler()
     y_train_std = sc_y.fit_transform(y_train)
 
-    number_of_test_data = 10
+    number_of_test_data = 1
     X_test0 = np.array([])
     y_test0 = np.array([])
     evm_test0 = 0
@@ -62,7 +62,7 @@ def iteration_1step(process_index, tap, result):
 
     pipe = make_pipeline(StandardScaler(),
                          ml.ANNReg001(neuron=300, epochs=500, lr=0.001, log=True))
-    pipe.fit(X_train, y_train_std)
+    pipe.fit(X_N17, y_N17_std)
     y_train_pred = pipe.predict(X_train)
     y_test0_pred = pipe.predict(X_test0)
     y_test1_pred = pipe.predict(X_test1)
@@ -107,10 +107,10 @@ if __name__ == '__main__':
     ml.GPU_off()
     ml.log_off()
 
-    # result = np.loadtxt('../results/result103a_31.csv', delimiter=',')
-    result = loop_multiprocessing()
+    result = np.loadtxt('../results/result103a_N17.csv', delimiter=',')
+    result = loop_multiprocessing(result)
     evm_scores = result['evm_scores']
-    np.savetxt('../results/result103a_40.csv', evm_scores, delimiter=',')
+    np.savetxt('../results/result103a_N17.csv', evm_scores, delimiter=',')
     """
     result = np.loadtxt('../results/result103a_02.csv', delimiter=',')
 
