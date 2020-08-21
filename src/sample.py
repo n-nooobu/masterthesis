@@ -19,15 +19,15 @@ from pyopt.util import save_pickle, load_pickle
 
 
 # 配列を生成し,16QAMに変調する
-bitsq = prbs(N=17, itr=0)
+bitsq = prbs(N=15, itr=4)
 random = np.random.randint(0, 2, 100000)
 mdl = Modulate('RZ16QAM')
-sq = mdl.transform(random)
+sq = mdl.transform(bitsq)
 
 sgnl = tr.Signal(seq=sq, form='RZ16QAM', PdBm=1)
 sgnl.transmission(Lmax=2500, ase=True)
 
-save_pickle(sgnl, '../data/input/random00000.pickle')
+save_pickle(sgnl, '../data/input/N15_itr4.pickle')
 
 
 """

@@ -1,7 +1,10 @@
+import os
+import glob
 import numpy as np
 import pandas as pd
 import pickle
 import random
+import cv2
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
@@ -270,13 +273,13 @@ def rzqpsk(bitsq, n):  # 平均入力パワー
     return data
 
 
-def nrzsixteenqam(bitsq, n):
+def nrzsixteenqam(bitsq, n, equalize=True):
     symbol_num = int(len(bitsq) / 4)
     tmp = bitsq
     amp = 1 / np.sqrt(10)
-    data = np.zeros(symbol_num * n, dtype=complex)
+    data_sample1 = np.zeros(symbol_num, dtype=complex)
     print('nrz16QAM modulation START')
-    for i in tqdm(range(symbol_num)):
+    for i in range(symbol_num):
         if tmp[i * 4] == 0:
             sig_i = -1
         else:
@@ -293,18 +296,37 @@ def nrzsixteenqam(bitsq, n):
             amp_q = 3 * amp
         else:
             amp_q = 1 * amp
-        data[i * n: i * n + n] = sig_i * amp_i + 1j * sig_q * amp_q
+        data_sample1[i] = sig_i * amp_i + 1j * sig_q * amp_q
+
+    if equalize:
+        symbol, inverse, counts = np.unique(data_sample1, return_inverse=True, return_counts=True)
+        print(counts)
+        count = [0] * len(symbol)
+        need = [False] * len(data_sample1)
+        for i in range(len(data_sample1)):
+            if count[inverse[i]] < min(counts):
+                need[i] = True
+                count[inverse[i]] += 1
+        data_sample1 = data_sample1[need]
+        symbol, inverse, counts = np.unique(data_sample1, return_inverse=True, return_counts=True)
+        print(counts)
+        data = np.zeros(len(data_sample1) * n, dtype=complex)
+    else:
+        data = np.zeros(symbol_num * n, dtype=complex)
+
+    for i in range(len(data_sample1)):
+        data[i * n: i * n + n] = data_sample1[i]
 
     return data
 
 
-def rzsixteenqam(bitsq, n):  # 平均入力パワー
+def rzsixteenqam(bitsq, n, equalize=False):  # 平均入力パワー
     symbol_num = int(len(bitsq) / 4)
     tmp = bitsq
     amp = 1 / np.sqrt(10)
-    data = np.zeros(symbol_num * n, dtype=complex)
+    data_sample1 = np.zeros(symbol_num, dtype=complex)
     print('rz16QAM modulation START')
-    for i in tqdm(range(symbol_num)):
+    for i in range(symbol_num):
         if tmp[i * 4] == 0:
             sig_i = -1
         else:
@@ -321,23 +343,43 @@ def rzsixteenqam(bitsq, n):  # 平均入力パワー
             amp_q = 3 * amp
         else:
             amp_q = 1 * amp
+        data_sample1[i] = sig_i * amp_i + 1j * sig_q * amp_q
+
+    if equalize:
+        symbol, inverse, counts = np.unique(data_sample1, return_inverse=True, return_counts=True)
+        print(counts)
+        count = [0] * len(symbol)
+        need = [False] * len(data_sample1)
+        for i in range(len(data_sample1)):
+            if count[inverse[i]] < min(counts):
+                need[i] = True
+                count[inverse[i]] += 1
+        data_sample1 = data_sample1[need]
+        symbol, inverse, counts = np.unique(data_sample1, return_inverse=True, return_counts=True)
+        print(counts)
+        data = np.zeros(len(data_sample1) * n, dtype=complex)
+    else:
+        data = np.zeros(symbol_num * n, dtype=complex)
+
+    for i in range(len(data_sample1)):
         for j in range(n):
-            data[i * n + j] = (sig_i * amp_i * np.sin(np.pi * j / n) + 1j * sig_q * amp_q * np.sin(np.pi * j / n)) * np.sqrt(2)
+            data[i * n + j] = data_sample1[i] * np.sin(np.pi * j / n) * np.sqrt(2)
 
     return data
 
 
 class Modulate:
-    def __init__(self, form='RZ16QAM', n=32):
+    def __init__(self, form='RZ16QAM', n=32, equalize=False):
         self.form = form
         self.n = n
+        self.equalize = equalize
 
     def transform(self, sq):
         mod_form = {'NRZQPSK': nrzqpsk,
                     'RZQPSK': rzqpsk,
                     'NRZ16QAM': nrzsixteenqam,
                     'RZ16QAM': rzsixteenqam}
-        data = mod_form[self.form](sq, self.n)
+        data = mod_form[self.form](sq, self.n, equalize=self.equalize)
         return data
 
 
@@ -381,4 +423,14 @@ if __name__ == '__main__':
 
     compare_nrz_and_rz(nrzdata, rzdata, 32)
     """
-    tenb = eightb_tenb(np.array([0, 5, 2]))
+    # tenb = eightb_tenb(np.array([0, 5, 2]))
+
+    bitsq = prbs(N=15, itr=0)
+    random = np.random.randint(0, 2, 10000)
+
+    image_path = glob.glob(os.path.join('../image/train_0/', '*.jpg'))
+    image = cv2.imread(image_path[0])[::10, ::10].reshape(-1)
+    # image_binary = eightb_tenb(image)
+    image_binary = image_to_binary(image)
+
+    sq = rzsixteenqam(image_binary, 32, equalize=True)

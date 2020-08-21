@@ -8,7 +8,7 @@ from pyopt import transmission as tr
 from pyopt.util import save_pickle, load_pickle
 
 
-def image_transmission(process_index, target, space, code='8B10B'):
+def image_transmission(process_index, target, space, code='8B10B', equalize=True):
     """画像をbitに変換し長距離伝送シミュレーションを実行する"""
     image_path = glob.glob(os.path.join('../image/' + target + '/', '*.jpg'))
     image = cv2.imread(image_path[process_index])[::space, ::space].reshape(-1)
@@ -17,24 +17,32 @@ def image_transmission(process_index, target, space, code='8B10B'):
     else:
         image_binary = image_to_binary(image)
 
-    mdl = Modulate('RZ16QAM')
+    if equalize:
+        mdl = Modulate('RZ16QAM', equalize=True)
+    else:
+        mdl = Modulate('RZ16QAM', equalize=False)
     sq = mdl.transform(image_binary)
 
     sgnl = tr.Signal(seq=sq, form='RZ16QAM', PdBm=1)
     sgnl.transmission(Lmax=2500, ase=True)
-    if code == '8B10B':
-        path = '../data/input/' + target + '/' + target + '_' + str(process_index).zfill(5) + '_' + str(space) + '_8B10B.pickle'
+
+    if code == '8B10B' and equalize:
+        path = '../data/input/' + target + '_8B10B_equalize/' + target + '_' + str(process_index).zfill(5) + '_' + str(space) + '.pickle'
+    elif code == '8B10B':
+        path = '../data/input/' + target + '_8B10B/' + target + '_' + str(process_index).zfill(5) + '_' + str(space) + '.pickle'
+    elif equalize:
+        path = '../data/input/' + target + '_equalize/' + target + '_' + str(process_index).zfill(5) + '_' + str(space) + '.pickle'
     else:
         path = '../data/input/' + target + '/' + target + '_' + str(process_index).zfill(5) + '_' + str(space) + '.pickle'
     save_pickle(sgnl, path)
 
 
-def loop_multiprocessing(start, end, target='train', space=10, code='8B10B'):
+def loop_multiprocessing(start, end, target='train', space=10, code='8B10B', equalize=False):
     process_list = []
     for i in range(start, end):
         process = Process(
             target=image_transmission,
-            kwargs={'process_index': i, 'target': target, 'space': space, 'code': code})
+            kwargs={'process_index': i, 'target': target, 'space': space, 'code': code, 'equalize': equalize})
         process.start()
         process_list.append(process)
     for process in process_list:
@@ -42,10 +50,10 @@ def loop_multiprocessing(start, end, target='train', space=10, code='8B10B'):
 
 
 if __name__ == '__main__':
-    start = 100
-    end = 130
-    target = 'train_0'
-    space = 10
-    code = '8B10B'
-    loop_multiprocessing(start, end, target, space, code)
-
+    for i in range(6):
+        start = i * 25
+        end = (i + 1) * 25
+        target = 'train_0'
+        space = 3
+        code = '8B10B'
+        loop_multiprocessing(start, end, target, space, code, equalize=True)

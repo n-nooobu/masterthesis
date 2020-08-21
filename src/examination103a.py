@@ -50,6 +50,11 @@ def iteration_1step(process_index, tap, result):
         y_test1 = np.append(y_test1, y_tmp).reshape(-1, 2)
     y_test1_std = sc_y.transform(y_test1)
 
+    N15 = load_pickle('../data/input/N15.pickle')
+    evm_N15 = N15.cal_evm_pr(2500)
+    X_N15, y_N15 = ml.data_shaping_with_overlapping(N15.signal['x_0'], N15.signal['x_2500'], 501, tap)
+    y_N15_std = sc_y.transform(y_N15)
+
     N17 = load_pickle('../data/input/N17.pickle')
     evm_N17 = N17.cal_evm_pr(2500)
     X_N17, y_N17 = ml.data_shaping_with_overlapping(N17.signal['x_0'], N17.signal['x_2500'], 501, tap)
@@ -62,16 +67,17 @@ def iteration_1step(process_index, tap, result):
 
     pipe = make_pipeline(StandardScaler(),
                          ml.ANNReg001(neuron=300, epochs=500, lr=0.001, log=True))
-    pipe.fit(X_N17, y_N17_std)
+    pipe.fit(X_N15, y_N15_std)
     y_train_pred = pipe.predict(X_train)
     y_test0_pred = pipe.predict(X_test0)
     y_test1_pred = pipe.predict(X_test1)
+    y_N15_pred = pipe.predict(X_N15)
     y_N17_pred = pipe.predict(X_N17)
     y_random_pred = pipe.predict(X_random)
 
     tmp = result['evm_scores']
-    tmp[0, process_index] = ml.evm_score(y_train_std, y_train_pred)
-    tmp[1, process_index] = evm_train / number_of_train_data
+    tmp[0, process_index] = ml.evm_score(y_N15_std, y_N15_pred)  # ml.evm_score(y_train_std, y_train_pred)
+    tmp[1, process_index] = evm_N15  # evm_train / number_of_train_data
     tmp[2, process_index] = ml.evm_score(y_test0_std, y_test0_pred)
     tmp[3, process_index] = evm_test0 / number_of_test_data
     tmp[4, process_index] = ml.evm_score(y_test1_std, y_test1_pred)
@@ -107,10 +113,10 @@ if __name__ == '__main__':
     ml.GPU_off()
     ml.log_off()
 
-    result = np.loadtxt('../results/result103a_N17.csv', delimiter=',')
+    result = np.loadtxt('../results/result103a_N15.csv', delimiter=',')
     result = loop_multiprocessing(result)
     evm_scores = result['evm_scores']
-    np.savetxt('../results/result103a_N17.csv', evm_scores, delimiter=',')
+    np.savetxt('../results/result103a_N15.csv', evm_scores, delimiter=',')
     """
     result = np.loadtxt('../results/result103a_02.csv', delimiter=',')
 
