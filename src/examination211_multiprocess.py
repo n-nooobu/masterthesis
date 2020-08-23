@@ -18,6 +18,7 @@ from torchvision.transforms import Compose
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
+from torch.multiprocessing import Process, Manager
 
 
 def batch_divide(max_tap=95, batch_size=1000, start=0, target_num=10, target_dir='train_0'):
@@ -82,55 +83,18 @@ class NLCNet(nn.Module):
         return X
 
 
-# ----- STATICS -----
-batch_size1 = 1000
-batch_size2 = 100
-max_tap = 95
-target_num1 = 10
-target_num2 = 10
-
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-print('Device available now:', device)
-
-
-# 学習データ, テストデータをバッチごとにpickleで保存
-train_df, train_prevm = batch_divide(max_tap=max_tap, batch_size=batch_size1, start=0, target_num=target_num1, target_dir='train_0_8B10B')
-test0_df, test0_prevm = batch_divide(max_tap=max_tap, batch_size=batch_size1, start=0, target_num=target_num2, target_dir='test_8B10B')
-test1_df, test1_prevm = batch_divide(max_tap=max_tap, batch_size=batch_size1, start=10, target_num=target_num2, target_dir='test_8B10B')
-N17_df, N17_prevm = batch_divide(max_tap=max_tap, batch_size=batch_size2, start=0, target_num=1, target_dir='N17')
-random_df, random_prevm = batch_divide(max_tap=max_tap, batch_size=batch_size2, start=0, target_num=1, target_dir='random')
-
-print(len(train_df) * batch_size1)
-
-# 平均の計算
-value_sum = 0
-value_num = 0
-for i in range(len(train_df)):
-    X = load_pickle(train_df['X_dir'][i])
-    value_sum += np.sum(X)
-    value_num += X.size
-mean = value_sum / value_num
-
-# 標準偏差の計算
-dispersion_sum = 0
-for i in range(len(train_df)):
-    X = load_pickle(train_df['X_dir'][i])
-    for j in range(X.shape[0]):
-        for k in range(X.shape[1]):
-            dispersion_sum += (X[j, k] - mean) ** 2
-std = np.sqrt(dispersion_sum / value_num)
-
-
-def train(process_index, tap, result):
+def train(process_index, tap, result, device, mean, std,
+          train_df, train_prevm, test0_df, test0_prevm, test1_df, test1_prevm,
+          N17_df, N17_prevm, random_df, random_prevm):
     print('started')
-    if result[0, process_index] != 0:
+    if result['evm_scores'][0, process_index] != 0:
         print('end')
         return result
 
     # ----- STATICS -----
     epochs = 300
     learning_rate = 0.001
-    num_workers = 8
+    num_workers = 0
 
     model = NLCNet(tap * 2).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
@@ -217,26 +181,85 @@ def train(process_index, tap, result):
         N17_evm /= len(N17_df)
         random_evm /= len(random_df)
 
-    result[0, process_index] = train_evm
-    result[1, process_index] = train_prevm
-    result[2, process_index] = test0_evm
-    result[3, process_index] = test0_prevm
-    result[4, process_index] = test1_evm
-    result[5, process_index] = test1_prevm
-    result[6, process_index] = N17_evm
-    result[7, process_index] = N17_prevm
-    result[8, process_index] = random_evm
-    result[9, process_index] = random_prevm
-    return result
+    tmp = result['evm_scores']
+    tmp[0, process_index] = train_evm
+    tmp[1, process_index] = train_prevm
+    tmp[2, process_index] = test0_evm
+    tmp[3, process_index] = test0_prevm
+    tmp[4, process_index] = test1_evm
+    tmp[5, process_index] = test1_prevm
+    tmp[6, process_index] = N17_evm
+    tmp[7, process_index] = N17_prevm
+    tmp[8, process_index] = random_evm
+    tmp[9, process_index] = random_prevm
+    result['evm_scores'] = tmp
 
 
-# 最初だけ
-result = np.zeros((10, 20), dtype=float)
-np.savetxt('../results/result211_002.csv', result, delimiter=',')
+if __name__ == '__main__':
+    # ----- STATICS -----
+    batch_size1 = 1000
+    batch_size2 = 100
+    max_tap = 95
+    target_num1 = 30
+    target_num2 = 10
 
-tap_list = [i * 5 + (1 - i % 2) for i in range(20)]
-for i, tap in enumerate(tap_list):
-    result = np.loadtxt('../results/result211_002.csv', delimiter=',')
-    retsult = train(i, tap, result)
-    np.savetxt('../results/result211_002.csv', retsult, delimiter=',')
-    time.sleep(10)
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    print('Device available now:', device)
+
+    # 学習データ, テストデータをバッチごとにpickleで保存
+    train_df, train_prevm = batch_divide(max_tap=max_tap, batch_size=batch_size1, start=0, target_num=target_num1,
+                                         target_dir='train_0_8B10B')
+    test0_df, test0_prevm = batch_divide(max_tap=max_tap, batch_size=batch_size1, start=0, target_num=target_num2,
+                                         target_dir='test_8B10B')
+    test1_df, test1_prevm = batch_divide(max_tap=max_tap, batch_size=batch_size1, start=10, target_num=target_num2,
+                                         target_dir='test_8B10B')
+    N17_df, N17_prevm = batch_divide(max_tap=max_tap, batch_size=batch_size2, start=0, target_num=1, target_dir='N17')
+    random_df, random_prevm = batch_divide(max_tap=max_tap, batch_size=batch_size2, start=0, target_num=1,
+                                           target_dir='random')
+
+    print(len(train_df) * batch_size1)
+
+    # 平均の計算
+    print('Start cal mean')
+    value_sum = 0
+    value_num = 0
+    for i in range(len(train_df)):
+        X = load_pickle(train_df['X_dir'][i])
+        value_sum += np.sum(X)
+        value_num += X.size
+    mean = value_sum / value_num
+    print('mean is :', mean)
+
+    # 標準偏差の計算
+    print('Start cal std')
+    dispersion_sum = 0
+    for i in range(len(train_df)):
+        X = load_pickle(train_df['X_dir'][i])
+        for j in range(X.shape[0]):
+            for k in range(X.shape[1]):
+                dispersion_sum += (X[j, k] - mean) ** 2
+    std = np.sqrt(dispersion_sum / value_num)
+    print('std is :', std)
+
+    manager = Manager()
+    result = manager.dict({'evm_scores': np.zeros((10, 20), dtype=float)})
+    # result = np.loadtxt('../results/result211_003.csv', delimiter=',')
+
+    process_list = []
+    tap_list = [i * 5 + (1 - i % 2) for i in range(20)]
+    for i, tap in enumerate(tap_list):
+        process = Process(
+            target=train,
+            kwargs={'process_index': i, 'tap': tap, 'result': result, 'device': device, 'mean': mean, 'std': std,
+                    'train_df': train_df, 'train_prevm': train_prevm,
+                    'test0_df': test0_df, 'test0_prevm': test0_prevm,
+                    'test1_df': test1_df, 'test1_prevm': test1_prevm,
+                    'N17_df': N17_df, 'N17_prevm': N17_prevm,
+                    'random_df': random_df, 'random_prevm': random_prevm})
+        process.start()
+        process_list.append(process)
+    for process in process_list:
+        process.join()
+
+    evm_scores = result['evm_scores']
+    np.savetxt('../results/result211_003.csv', evm_scores, delimiter=',')

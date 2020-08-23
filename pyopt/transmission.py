@@ -261,6 +261,33 @@ def display_constellation(signal, dtype='complex'):
     plt.show()
 
 
+def display_constellation_color(signal, seq, count=False):
+    symbol, inverse, counts = np.unique(seq, return_inverse=True, return_counts=True)
+
+    fig = plt.figure()
+    ax = fig.add_subplot()
+    for i in range(len(symbol)):
+        line, = ax.plot(signal[seq == symbol[i]].real, signal[seq == symbol[i]].imag, '.', label=str(counts[i]))
+    if count:
+        ax.legend()
+        ax.set_xlim((-150000, 180000))
+    else:
+        ax.set_xlim((-150000, 150000))
+    ax.set_ylim((-150000, 150000))
+    ax.xaxis.set_tick_params(direction='in')
+    ax.yaxis.set_tick_params(direction='in')
+    plt.tick_params(labelbottom=False,
+                    labelleft=False,
+                    labelright=False,
+                    labeltop=False)
+    plt.tick_params(bottom=False,
+                    left=False,
+                    right=False,
+                    top=False)
+    plt.subplots_adjust(left=0.05, bottom=0.05, right=0.95, top=0.95)
+    plt.show()
+
+
 if __name__ == '__main__':
     """
     bitsq = prbs(N=17, itr=0)
