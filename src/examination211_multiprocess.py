@@ -197,10 +197,10 @@ def train(process_index, tap, result, device, mean, std,
 
 if __name__ == '__main__':
     # ----- STATICS -----
-    batch_size1 = 1000
+    batch_size1 = 100
     batch_size2 = 100
     max_tap = 95
-    target_num1 = 30
+    target_num1 = 50
     target_num2 = 10
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -262,4 +262,4 @@ if __name__ == '__main__':
         process.join()
 
     evm_scores = result['evm_scores']
-    np.savetxt('../results/result211_003.csv', evm_scores, delimiter=',')
+    np.savetxt('../results/result211_004.csv', evm_scores, delimiter=',')
