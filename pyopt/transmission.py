@@ -269,7 +269,11 @@ def display_constellation_color(signal, seq, count=False):
     for i in range(len(symbol)):
         line, = ax.plot(signal[seq == symbol[i]].real, signal[seq == symbol[i]].imag, '.', label=str(counts[i]))
     if count:
-        ax.legend()
+        leg = plt.legend(bbox_to_anchor=(1.005, 1), loc=2, borderaxespad=0.)
+        for l in leg.get_lines():
+            l.set_alpha(1)
+            l.set_marker('o')
+
         ax.set_xlim((-150000, 180000))
     else:
         ax.set_xlim((-150000, 150000))

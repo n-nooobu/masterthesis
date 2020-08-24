@@ -17,7 +17,7 @@ from pyopt import transmission as tr
 from pyopt import machine_learning as ml
 from pyopt.util import save_pickle, load_pickle
 
-
+"""
 # 配列を生成し,16QAMに変調する
 bitsq = prbs(N=15, itr=4)
 random = np.random.randint(0, 2, 100000)
@@ -32,10 +32,10 @@ sgnl = tr.Signal(seq=sq, form='RZ16QAM', PdBm=1)
 sgnl.transmission(Lmax=2500, ase=True)
 
 save_pickle(sgnl, '../data/input/train/train_00009_10.pickle')
+"""
 
-
-# sgnl = load_pickle('../data/input/train_8B10B/train_00009_10_8B10B.pickle')
-# tr.display_constellation_color(sgnl.signal['x_500'][::10], sgnl.seq[16:: 32][::10], count=True)
+sgnl = load_pickle('../data/input/train_8B10B/train_00009_10_8B10B.pickle')
+tr.display_constellation_color(sgnl.signal['x_500'][::10], sgnl.seq[16:: 32][::10], count=True)
 
 """
 # ml.GPU_restrict()
