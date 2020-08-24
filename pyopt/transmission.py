@@ -264,19 +264,16 @@ def display_constellation(signal, dtype='complex'):
 def display_constellation_color(signal, seq, count=False):
     symbol, inverse, counts = np.unique(seq, return_inverse=True, return_counts=True)
 
-    if count:
-        fig = plt.figure(figsize=(6.75, 6))
-    else:
-        fig = plt.figure(figsize=(6, 6))
+    fig = plt.figure()
     ax = fig.add_subplot()
     for i in range(len(symbol)):
         line, = ax.plot(signal[seq == symbol[i]].real, signal[seq == symbol[i]].imag, '.', label=str(counts[i]))
     if count:
-        ax.legend(fontsize=14)
-        ax.set_xlim((-120000, 150000))
+        ax.legend()
+        ax.set_xlim((-150000, 180000))
     else:
-        ax.set_xlim((-120000, 120000))
-    ax.set_ylim((-120000, 120000))
+        ax.set_xlim((-150000, 150000))
+    ax.set_ylim((-150000, 150000))
     ax.xaxis.set_tick_params(direction='in')
     ax.yaxis.set_tick_params(direction='in')
     plt.tick_params(labelbottom=False,
