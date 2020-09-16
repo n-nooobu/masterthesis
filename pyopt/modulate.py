@@ -11,7 +11,7 @@ from tqdm import tqdm
 from pyopt.util import load_pickle
 
 
-def prbs(N, itr=0):
+def prbs(N, itr=1):
     MC = np.array([[5, 3, 2, 1, 0], [6, 5, 2, 1, 0], [7, 3, 2, 1, 0], [8, 7, 2, 1, 0],
                    [9, 7, 2, 1, 0], [10, 5, 2, 1, 0], [11, 4, 2, 1, 0], [12, 8, 2, 1, 0],
                    [13, 12, 8, 2, 0], [14, 3, 2, 1, 0], [15, 12, 3, 1, 0], [16, 12, 3, 1, 0], [17, 3, 2, 1, 0]])
@@ -26,10 +26,10 @@ def prbs(N, itr=0):
         tmp = m[MC[N - 5, 1], b] + m[MC[N - 5, 2], b] + m[MC[N - 5, 3], b] + m[MC[N - 5, 4], b]
         m[N - 1, a] = tmp % 2
         out[i] = m[0, b]
-    if itr:
-        tmp = out
-        for i in range(itr - 1):
-            out = np.concatenate([out, tmp])
+
+    tmp = out
+    for i in range(itr - 1):
+        out = np.concatenate([out, tmp])
     return out
 
 
