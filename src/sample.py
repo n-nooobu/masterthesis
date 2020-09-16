@@ -12,14 +12,14 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import make_pipeline
 from sklearn.metrics import make_scorer
 
-from pyopt.modulate import prbs, Modulate, eightb_tenb, image_to_binary
+from pyopt.modulate import prbs, Modulate, eightb_tenb, image_to_binary, sixteenqam_reverse
 from pyopt import transmission as tr
 from pyopt import machine_learning as ml
-from pyopt.util import save_pickle, load_pickle
+from pyopt.util import save_pickle, load_pickle, correlation
 
 """
 # 配列を生成し,16QAMに変調する
-bitsq = prbs(N=15, itr=4)
+bitsq = prbs(N=15, itr=0)
 random = np.random.randint(0, 2, 100000)
 image_path = glob.glob(os.path.join('../image/train/', '*.jpg'))
 image = cv2.imread(image_path[9])[::10, ::10].reshape(-1)
@@ -34,8 +34,23 @@ sgnl.transmission(Lmax=2500, ase=True)
 save_pickle(sgnl, '../data/input/train/train_00009_10.pickle')
 """
 
-sgnl = load_pickle('../data/input/train_0_8B10B_equalize/train_0_00009_3.pickle')
-tr.display_constellation_color(sgnl.signal['x_2500'][::2], sgnl.seq[16:: 32][::2], count=True)
+bitsq = prbs(N=7, itr=0)
+image0 = load_pickle('../data/input/train_0_8B10B/train_0_00000_10_8B10B.pickle')
+image1 = load_pickle('../data/input/train_0_8B10B/train_0_00001_10_8B10B.pickle')
+
+image0 = sixteenqam_reverse(image0.seq, 32)
+image1 = sixteenqam_reverse(image1.seq, 32)
+
+corr = correlation(image0[::2], image0)
+
+fig = plt.figure()
+ax = fig.add_subplot()
+line, = ax.plot([i for i in range(len(corr))], corr)
+plt.show()
+
+
+# sgnl = load_pickle('../data/input/train_0_8B10B_equalize/train_0_00009_3.pickle')
+# tr.display_constellation_color(sgnl.signal['x_2500'][::2], sgnl.seq[16:: 32][::2], count=True)
 
 """
 # ml.GPU_restrict()

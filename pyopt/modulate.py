@@ -368,6 +368,31 @@ def rzsixteenqam(bitsq, n, equalize=False):  # 平均入力パワー
     return data
 
 
+def sixteenqam_reverse(sq, n):
+    sq = sq[int(n / 2)::n]
+    amp = np.unique(sq.real)
+    bitsq = np.zeros(len(sq) * 4, dtype=int)
+    for i in range(len(sq)):
+        if sq[i].real < 0:
+            bitsq[i * 4] = 0
+        else:
+            bitsq[i * 4] = 1
+        if abs(sq[i].real) == amp[3]:
+            bitsq[i * 4 + 1] = 0
+        else:
+            bitsq[i * 4 + 1] = 1
+        if sq[i].imag > 0:
+            bitsq[i * 4 + 2] = 0
+        else:
+            bitsq[i * 4 + 2] = 1
+        if abs(sq[i].imag) == amp[3]:
+            bitsq[i * 4 + 3] = 0
+        else:
+            bitsq[i * 4 + 3] = 1
+
+    return bitsq
+
+
 class Modulate:
     def __init__(self, form='RZ16QAM', n=32, equalize=False):
         self.form = form
@@ -380,6 +405,14 @@ class Modulate:
                     'NRZ16QAM': nrzsixteenqam,
                     'RZ16QAM': rzsixteenqam}
         data = mod_form[self.form](sq, self.n, equalize=self.equalize)
+        return data
+
+    def reverse_transform(self, sq):
+        mod_form = {'NRZQPSK': nrzqpsk,
+                    'RZQPSK': rzqpsk,
+                    'NRZ16QAM': sixteenqam_reverse,
+                    'RZ16QAM': sixteenqam_reverse}
+        data = mod_form[self.form](sq, self.n)
         return data
 
 
@@ -428,9 +461,12 @@ if __name__ == '__main__':
     bitsq = prbs(N=15, itr=0)
     random = np.random.randint(0, 2, 10000)
 
-    image_path = glob.glob(os.path.join('../image/train_0/', '*.jpg'))
+    image_path = glob.glob(os.path.join('../image/train/', '*.jpg'))
     image = cv2.imread(image_path[0])[::10, ::10].reshape(-1)
     # image_binary = eightb_tenb(image)
     image_binary = image_to_binary(image)
 
-    sq = rzsixteenqam(image_binary, 32, equalize=True)
+    sq = nrzsixteenqam(bitsq, 32, equalize=False)
+    bitsq2 = sixteenqam_reverse(sq, 32)
+
+    a = bitsq == bitsq2

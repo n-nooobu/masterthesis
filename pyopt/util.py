@@ -36,3 +36,17 @@ def load_pickle(path):
     with open(path, 'rb') as f:
         data = pickle.load(f)
     return data
+
+
+def correlation(sq1, sq2):
+    if len(sq1) <= len(sq2):
+        sq = sq1
+        sq_roll = np.roll(sq2, len(sq2) - int(len(sq1) / 2))
+    else:
+        sq = sq2
+        sq_roll = np.roll(sq1, len(sq1) - int(len(sq2) / 2))
+    corr = np.zeros(len(sq))
+    for i in tqdm(range(len(sq))):
+        corr[i] = (len(sq) - np.sum(sq ^ sq_roll[: len(sq)])) / len(sq)
+        sq_roll = np.roll(sq_roll, 1)
+    return corr
