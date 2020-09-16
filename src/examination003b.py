@@ -18,7 +18,7 @@ tap = 1
 list0 = [n for n in range(10)]
 epochs = np.array([150, 200, 250, 300, 350, 400, 450, 500])
 neuron = np.array([10, 20, 40, 80, 160, 320, 640, 1280])
-
+"""
 # neuron = np.logspace(3.4, 10, 8, base=2).astype(np.int32)
 evm = np.zeros((8, 8), dtype=float)
 best_score = 100
@@ -66,8 +66,8 @@ for e_idx, e in enumerate(epochs):
             best_params['epochs'] = e
 
 np.savetxt('result/result003b_01.csv', evm, delimiter=',')
-
-evm = np.loadtxt('result/result003b_01.csv', delimiter=',')
+"""
+evm = np.loadtxt('../results/result003b_01.csv', delimiter=',')
 
 
 fig, ax = plt.subplots()
@@ -89,7 +89,9 @@ for i in range(8):
             flag[2] = False
         else:
             ax.scatter(epochs[j], neuron[i], c='darkblue', s=50 + (evm[i][j] - 25) * 900 / 7)
-plt.xticks(fontsize=16)
-plt.yticks(fontsize=16)
-plt.legend(bbox_to_anchor=(1.0, 0.9), labelspacing=1.8, prop={'size': 13}, title="EVM[%]")
+plt.xticks(fontsize=18)
+plt.yticks(fontsize=18)
+plt.legend(fontsize=14, bbox_to_anchor=(1.0, 0.9), labelspacing=1.8, prop={'size': 13}, title="EVM[%]")
+ax.xaxis.set_tick_params(labelsize=16, direction='in')
+ax.yaxis.set_tick_params(labelsize=16, direction='in')
 plt.subplots_adjust(left=0.13, bottom=0.15, right=0.78, top=0.98)

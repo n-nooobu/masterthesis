@@ -14,7 +14,7 @@ def iteration_1step(process_index, tap, result):
         print('end')
         return
 
-    number_of_train_data = 100
+    number_of_train_data = 1
     X_train = np.array([])
     y_train = np.array([])
     evm_train = 0
@@ -60,14 +60,14 @@ def iteration_1step(process_index, tap, result):
     X_N17, y_N17 = ml.data_shaping_with_overlapping(N17.signal['x_0'], N17.signal['x_2500'], 501, tap)
     y_N17_std = sc_y.transform(y_N17)
 
-    random = load_pickle('../data/input/random/random00000.pickle')
+    random = load_pickle('../data/input/random/random00001.pickle')
     evm_random = random.cal_evm_pr(2500)
     X_random, y_random = ml.data_shaping_with_overlapping(random.signal['x_0'], random.signal['x_2500'], 501, tap)
     y_random_std = sc_y.transform(y_random)
 
     pipe = make_pipeline(StandardScaler(),
                          ml.ANNReg001(neuron=300, epochs=500, lr=0.001, log=True))
-    pipe.fit(X_train, y_train_std)
+    pipe.fit(X_random, y_random_std)
     y_train_pred = pipe.predict(X_train)
     y_test0_pred = pipe.predict(X_test0)
     y_test1_pred = pipe.predict(X_test1)
@@ -113,10 +113,10 @@ if __name__ == '__main__':
     ml.GPU_off()
     ml.log_off()
 
-    result = np.loadtxt('../results/result103a_41.csv', delimiter=',')
+    result = np.loadtxt('../results/result103a_random00001.csv', delimiter=',')
     result = loop_multiprocessing(result)
     evm_scores = result['evm_scores']
-    np.savetxt('../results/result103a_42.csv', evm_scores, delimiter=',')
+    np.savetxt('../results/result103a_random00001.csv', evm_scores, delimiter=',')
     """
     result = np.loadtxt('../results/result103a_02.csv', delimiter=',')
 
