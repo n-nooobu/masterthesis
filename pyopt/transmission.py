@@ -8,12 +8,12 @@ from tqdm import tqdm
 
 
 class Signal:
-    def __init__(self, seq, form='RZ16QAM', n=32, boudrate=28, PdBm=0.0, Ledfa=100, stepedfa=30,
+    def __init__(self, seq, form='RZ16QAM', n=32, baudrate=28, PdBm=0.0, Ledfa=100, stepedfa=30,
                  gamma=1.4, D=16, Alpha=0.16, NF=4):
         self.seq = seq
         self.form = form
         self.n = n
-        self.boudrate = boudrate
+        self.baudrate = baudrate
         self.PdBm = PdBm
         self.Ledfa = Ledfa
         self.stepedfa = stepedfa
@@ -23,12 +23,12 @@ class Signal:
         self.NF = NF
 
         """固定パラメータ"""
-        self.bitratelist = {'NRZQPSK': self.boudrate * 2,
-                            'RZQPSK': self.boudrate * 2,
-                            'NRZ16QAM': self.boudrate * 4,
-                            'RZ16QAM': self.boudrate * 4}
+        self.bitratelist = {'NRZQPSK': self.baudrate * 2,
+                            'RZQPSK': self.baudrate * 2,
+                            'NRZ16QAM': self.baudrate * 4,
+                            'RZ16QAM': self.baudrate * 4}
         self.bitrate = self.bitratelist[self.form]  # ビットレート[Gbps]
-        self.B = self.boudrate * 2 * 10 ** 9  # 帯域幅[bit/s]
+        self.B = self.baudrate * 2 * 10 ** 9  # 帯域幅[bit/s]
         self.c = 3 * 10 ** 5  # ファイバ中光速[km/sec]
         self.Lambda_c = 1550  # キャリア波長[nm]
         self.f_c = self.c * 10 ** 3 / (self.Lambda_c * 10 ** -9)  # キャリア周波数[Hz]
@@ -47,7 +47,7 @@ class Signal:
         self.PW = 10 ** (self.PdBm / 10 - 3)  # 光電力[W]
         self.Phi_p = np.sqrt((120 * np.pi / self.nc) * self.PW / (self.Xi * self.As))  # 光電界強度[V/m]
         self.signal = {'Lnow': 0, 'x_Lnow': self.Phi_p * self.seq}
-        self.signal['x_0'] = self.signal['x_Lnow'][int(self.n / 2):: self.n]
+        self.signal['x_0'] = self.signal['x_Lnow']
 
         """軸生成"""
         self.length = len(self.signal['x_Lnow'])
@@ -87,49 +87,53 @@ class Signal:
                     * self.Phi_p ** 2 * int(L / self.Ledfa) * 180/np.pi
         return pr_theo
 
-    def phase_rotation_simu(self, L):
+    def phase_rotation_simu(self, L, signal):
+        input_signal = self.signal['x_0'][int(self.n / 2):: self.n]
         tmp = np.zeros((2, 2), dtype=complex)
-        for i in range(len(self.signal['x_0'])):
-            if self.signal['x_0'][i].real > 0 and self.signal['x_0'][i].imag > 0:
-                tmp = np.append(tmp, np.array([self.signal['x_0'][i], self.signal['x_'+str(L)][i]]).reshape(1, 2), axis=0)
+        for i in range(len(input_signal)):
+            if input_signal[i].real > 0 and input_signal[i].imag > 0:
+                tmp = np.append(tmp, np.array([input_signal[i], signal[i]]).reshape(1, 2), axis=0)
         tmp = tmp[2::]
         r_in = np.angle(tmp[:, 0]) * 180 / np.pi
         r = np.angle(tmp[:, 1]) * 180 / np.pi
         pr_simu = np.mean(-(r - r_in))
         return pr_simu
 
-    def cal_evm(self, L):
-        tmp = 0
-        for i in range(len(self.signal['x_'+str(L)])):
-            tmp += abs(self.signal['x_'+str(L)][i] - self.signal['x_0'][i]) ** 2 / abs(self.signal['x_0'][i]) ** 2
-        evm = np.sqrt(tmp / len(self.signal['x_'+str(L)])) * 100
-        return evm
-
-    def cal_evm_pr(self, L):
-        pr_theo = self.phase_rotation_theo(L)
-        signal = self.signal['x_'+str(L)] * np.exp(1j * pr_theo * np.pi / 180)
+    def cal_evm(self, L, signal):
+        input_signal = self.signal['x_0'][int(self.n / 2):: self.n]
         tmp = 0
         for i in range(len(signal)):
-            tmp += abs(signal[i] - self.signal['x_0'][i]) ** 2 / abs(self.signal['x_0'][i]) ** 2
+            tmp += abs(signal[i] - input_signal[i]) ** 2 / abs(input_signal[i]) ** 2
+        evm = np.sqrt(tmp / len(signal)) * 100
+        return evm
+
+    def cal_evm_pr(self, L, signal):
+        input_signal = self.signal['x_0'][int(self.n / 2):: self.n]
+        pr_theo = self.phase_rotation_theo(L)
+        signal = signal * np.exp(1j * pr_theo * np.pi / 180)
+        tmp = 0
+        for i in range(len(signal)):
+            tmp += abs(signal[i] - input_signal[i]) ** 2 / abs(input_signal[i]) ** 2
         evm_pr = np.sqrt(tmp / len(signal)) * 100
         return evm_pr
 
-    def cal_evm_min(self, L):
+    def cal_evm_min(self, L, signal):
+        input_signal = self.signal['x_0'][int(self.n / 2):: self.n]
         evm_min = 200
         i_min = 0
         for i in range(360):
-            signal = self.signal['x_'+str(L)] * np.exp(1j * i * np.pi/180)
+            signal = signal * np.exp(1j * i * np.pi/180)
             tmp = 0
             for j in range(len(signal)):
-                tmp += abs(signal[j] - self.signal['x_0'][j]) ** 2 / abs(self.signal['x_0'][j]) ** 2
+                tmp += abs(signal[j] - input_signal[j]) ** 2 / abs(input_signal[j]) ** 2
             evm = np.sqrt(tmp / len(signal)) * 100
             if evm < evm_min:
                 evm_min = evm
                 i_min = i
         return evm_min, i_min
 
-    def cal_ber(self, L):
-        evm = self.cal_evm(L)
+    def cal_ber(self, L, signal):
+        evm = self.cal_evm(L, signal)
         M = {'NRZQPSK': 4,
              'RZQPSK': 4,
              'NRZ16QAM': 16,
@@ -138,21 +142,21 @@ class Signal:
             * special.erfc(np.sqrt(3 / 2 / (M[self.form] - 1) / (evm / 100) ** 2))
         return ber
 
-    def cal_qfac(self, L):
-        ber = self.cal_ber(L)
+    def cal_qfac(self, L, signal):
+        ber = self.cal_ber(L, signal)
         q = 20 * np.log10(np.sqrt(2) * special.erfcinv(2 * ber))
         return q
 
-    def cal_snr(self, L):
-        evm = self.cal_evm(L)
+    def cal_snr(self, L, signal):
+        evm = self.cal_evm(L, signal)
         snr = 10 * np.log10(1 / (evm / 100) ** 2)
         return snr
 
     def transmission(self, Lmax=1000, ase=True):
-        for i in tqdm(range(int(Lmax / self.Ledfa))):
-            self.transmission_1step(ase)
+        for _ in tqdm(range(int((Lmax - self.signal['Lnow']) / self.Ledfa))):
+            self.transmission_1span(ase)
 
-    def transmission_1step(self, ase=True):
+    def transmission_1span(self, ase=True):
         tmp = self.signal['x_Lnow']
         tmp = self._add_nonlinear_distortion(tmp)  # 線形歪,非線形歪,減衰を同時に加える
         tmp *= 10 ** (self.Alpha * self.Ledfa / 10)  # EDFAによる増幅を行う
@@ -161,10 +165,7 @@ class Signal:
         self.signal['x_Lnow'] = tmp
         self.signal['Lnow'] += self.Ledfa
         if self.signal['Lnow'] % 500 == 0:
-            tmp_lc = deepcopy(tmp)
-            tmp_lc = self.linear_compensation(self.signal['Lnow'], tmp_lc)
-            tmp_lc = tmp_lc[int(self.n / 2):: self.n]
-            self.signal['x_'+str(self.signal['Lnow'])] = tmp_lc
+            self.signal['x_'+str(self.signal['Lnow'])] = tmp
 
     def linear_compensation(self, L, x):
         S = fft(x)

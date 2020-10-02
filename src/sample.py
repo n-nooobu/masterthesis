@@ -33,7 +33,7 @@ sgnl.transmission(Lmax=2500, ase=True)
 
 save_pickle(sgnl, '../data/input/train/train_00009_10.pickle')
 """
-
+"""
 bitsq = prbs(N=7, itr=0)
 image0 = load_pickle('../data/input/train_0_8B10B/train_0_00000_10_8B10B.pickle')
 image1 = load_pickle('../data/input/train_0_8B10B/train_0_00001_10_8B10B.pickle')
@@ -47,7 +47,12 @@ fig = plt.figure()
 ax = fig.add_subplot()
 line, = ax.plot([i for i in range(len(corr))], corr)
 plt.show()
+"""
 
+df_dir = '../data/input/prbs.csv'
+df = pd.read_csv(df_dir, index_col=0)
+sgnl = load_pickle(df[(df['N']==13) & (df['itr']==1) & (df['form']=='RZ16QAM') & (df['n']==32) & (df['equalize']==False) &
+                                      (df['baudrate']==28) & (df['PdBm']==1)]['data_path'][0])
 
 # sgnl = load_pickle('../data/input/train_0_8B10B_equalize/train_0_00009_3.pickle')
 # tr.display_constellation_color(sgnl.signal['x_2500'][::2], sgnl.seq[16:: 32][::2], count=True)
