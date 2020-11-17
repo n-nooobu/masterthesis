@@ -1,5 +1,6 @@
 venv/
 .idea/
-data/
+data/image/
+data/input/
 image/
 .ipynb_checkpoints/
