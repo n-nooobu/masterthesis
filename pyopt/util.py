@@ -50,3 +50,11 @@ def correlation(sq1, sq2):
         corr[i] = (len(sq) - np.sum(sq ^ sq_roll[: len(sq)])) / len(sq)
         sq_roll = np.roll(sq_roll, 1)
     return corr
+
+
+def sampling_signal(signal, n, sampling):
+    out = np.zeros(len(signal) // n * sampling, dtype=complex)
+    for i in range(len(signal) // n):
+        for j, k in enumerate([_ for _ in range(n)][::n // sampling]):
+            out[i * sampling + j] = signal[i * n + k]
+    return out
